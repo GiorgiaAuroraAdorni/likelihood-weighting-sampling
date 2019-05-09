@@ -1,62 +1,71 @@
-# Input
+import pandas as pd
+import numpy as np
 
-probWtrue = 0.05
+# Set the nodes in the topologic order H, W, A, J
+nodes = np.array(["H", "W", "A", "J"])
 
-probHtrue = 0.2
+probH = pd.DataFrame({True: [0.2], False: [0.8]})
 
-probAtrue_W = [ # W  Atrue
-                [ 1, 0.1 ],
-                [ 0, 0.3 ]
-              ]
+probW = pd.DataFrame({True: [0.05], False: [0.95]})
 
-probJtrue_HWA = [# H  W  A  Jtrue
-                 [ 1, 1, 1, 0.95 ],
-                 [ 1, 1, 0, 0.95 ],
-                 [ 1, 0, 1, 0.95 ],
-                 [ 1, 0, 0, 0.95 ],
-                 [ 0, 1, 1, 0.5  ],
-                 [ 0, 1, 0, 0.3  ],
-                 [ 0, 0, 1, 0.6  ],
-                 [ 0, 0, 0, 0.1  ]
-                ]
+probA_W = pd.DataFrame({True: [0.3, 0.1], False: [0.7, 0.9]})
 
-bn = [probWtrue, probHtrue, probAtrue_W, probJtrue_HWA]
-# def weighted_sample(bn, e):
+probJ_HWA = pd.DataFrame({True: [0.1, 0.6, 0.3, 0.5, 0.95, 0.95, 0.95, 0.95],
+                          False: [0.9, 0.4, 0.7, 0.05, 0.05, 0.05, 0.05, 0.5]})
+
+net = {nodes[0]: probH, nodes[1]: probW, nodes[2]: probA_W, nodes[3]: probJ_HWA}
+
+
+parents = np.array([[0, 0, 0, 0],
+                    [0, 0, 0, 0],
+                    [0, 1, 0, 0],
+                    [1, 1, 1, 0]], dtype=bool)
+
+#     P(n=sample[n] | parents(var))
+# bn = [probWtrue, probHtrue, probAtrue_W, probJtrue_HWA]
+
+# print(bn)
+e = {nodes[1]: True, nodes[3]: False}
+
+
+def weighted_sample(bn, parents, evidence):
+    # suppose that the evidence is something like J=F, W=T and the query H=T
+    # we want to calculate P(H=T|J=F, W=T)
+
+    weight = 1
+    sample = evidence
+
+    for i, n in enumerate(nodes):
+        par = nodes[parents[i]]
+        parents_value = list()
+
+        for p in par:
+            parents_value.append(sample[p])
+
+        acc = 0
+
+        for j, el in enumerate(parents_value):
+            exp = len(parents_value) - j - 1
+
+            acc = el * (2**exp)
+
+        if n in evidence: # (is an evidence variable with value x in e)
+            probability = bn[n].loc[acc, sample[n]]
+
+            weight = weight * probability  # weight * P(n=sample[n] | parents(var))
+
+        else:
+            random = round(np.random.random_sample(), 2)  #  random sample from P(var | parents(var))
+            probability = bn[n].loc[acc, True]
+
+            if random <= probability:
+                sample[n] = True
+            else:
+                sample[n] = False
+
+    return sample, weight
+
+
+print(weighted_sample(net, parents, e))
+
 #
-#     w = 1
-#     x
-#
-#     for var in X:
-#         if var #(is an evidence variable with value x in e)
-#             w = w * #P(var = x | parents(var))
-#         else
-#             x = #random sample from P(var | parents(var))
-#
-#
-#
-#     return x, w
-#
-#
-# def likelihood_weighting(X, e, bn, N):
-#     """
-#     :param X: query variable
-#     :param e: observed values fro variables E
-#     :param bn: a bayesian network specifying joint distribution P(X1, ..., Xn)
-#     :param N: the total number of samples to be generated
-#     :return: an estimate of P(X | e)
-#
-#     Local variables:
-#     - weights: a vector of weighted count fro eac value of X, initialy zero
-#     """
-#
-#     weights = list()
-#
-#     for i in range (1, N):
-#         x, w = weighted_sample(bn, e)
-#         weights[x] = weights[x] + w
-#         # x is the value of X in x
-#
-#
-#     # normalized = normalize(weights)
-#
-#     return normalized
