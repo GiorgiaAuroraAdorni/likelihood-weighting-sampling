@@ -1,30 +1,5 @@
 import pandas as pd
 import numpy as np
-# Set the nodes in the topologic order H, W, A, J
-nodes = np.array(["H", "W", "A", "J"])
-
-probH = pd.DataFrame({True: [0.2], False: [0.8]})
-
-probW = pd.DataFrame({True: [0.05], False: [0.95]})
-
-probA_W = pd.DataFrame({True: [0.3, 0.1], False: [0.7, 0.9]})
-
-probJ_HWA = pd.DataFrame({True: [0.1, 0.6, 0.3, 0.5, 0.95, 0.95, 0.95, 0.95],
-                          False: [0.9, 0.4, 0.7, 0.05, 0.05, 0.05, 0.05, 0.5]})
-
-net = {nodes[0]: probH, nodes[1]: probW, nodes[2]: probA_W, nodes[3]: probJ_HWA}
-
-
-parents = np.array([[0, 0, 0, 0],
-                    [0, 0, 0, 0],
-                    [0, 1, 0, 0],
-                    [1, 1, 1, 0]], dtype=bool)
-
-#     P(n=sample[n] | parents(var))
-# bn = [probWtrue, probHtrue, probAtrue_W, probJtrue_HWA]
-
-# print(bn)
-e = {nodes[1]: True, nodes[3]: False}
 import copy
 
 
@@ -49,13 +24,13 @@ def weighted_sample(bn, parents, evidence):
 
             acc = el * (2**exp)
 
-        if n in evidence: # (is an evidence variable with value x in e)
+        if n in evidence:  # (is an evidence variable with value x in e)
             probability = bn[n].loc[acc, sample[n]]
 
             weight = weight * probability  # weight * P(n=sample[n] | parents(var))
 
         else:
-            random = round(np.random.random_sample(), 2)  #  random sample from P(var | parents(var))
+            random = np.random.random_sample()  # random sample from P(var | parents(var))
             probability = bn[n].loc[acc, True]
 
             if random <= probability:
@@ -66,6 +41,67 @@ def weighted_sample(bn, parents, evidence):
     return sample, weight
 
 
-print(weighted_sample(net, parents, e))
+def likelihood_weighting(query, evidence, bn, parents, n_sample):
+    """
+    :param query: query variable
+    :param evidence: observed values for variables E
+    :param bn: a bayesian network specifying joint distribution P(X1, ..., Xn)
+    :param parents:
+    :param n_sample: the total number of samples to be generated
+    :return: an estimate of P(X | e)
 
-#
+    Local variables:
+    - weights: a vector of weighted count for each value of X, initialy zero
+    """
+
+    weights = [0, 0]
+
+    for i in range(n_sample):
+        sample, weight = weighted_sample(bn, parents, evidence)
+
+        if not sample[query[0]]:
+            weights[0] = weights[0] + weight
+        else:
+            weights[1] = weights[1] + weight
+
+    return weights/np.sum(weights)
+
+
+# Set the nodes in topological order H, W, A, J
+nodes = np.array(["H", "W", "A", "J"])
+
+probH = pd.DataFrame({True: [0.2], False: [0.8]})
+
+probW = pd.DataFrame({True: [0.05], False: [0.95]})
+
+probA_W = pd.DataFrame({True: [0.3, 0.1], False: [0.7, 0.9]})
+
+probJ_HWA = pd.DataFrame({True: [0.1, 0.6, 0.3, 0.5, 0.95, 0.95, 0.95, 0.95],
+                          False: [0.9, 0.4, 0.7, 0.5, 0.05, 0.05, 0.05, 0.05]})
+
+net = {nodes[0]: probH, nodes[1]: probW, nodes[2]: probA_W, nodes[3]: probJ_HWA}
+
+
+adj = np.array([[0, 0, 0, 0],
+                    [0, 0, 0, 0],
+                    [0, 1, 0, 0],
+                    [1, 1, 1, 0]], dtype=bool)
+
+#     P(n=sample[n] | parents(var))
+# bn = [probWtrue, probHtrue, probAtrue_W, probJtrue_HWA]
+
+# print(bn)
+e = {nodes[2]: True}
+
+q = [nodes[3], True]
+
+
+normalized = likelihood_weighting(q, e, net, adj, 1000)
+
+print("Normalized: ", normalized)
+
+if q[1]:
+    print(normalized[1])
+else:
+    print(normalized[0])
+
