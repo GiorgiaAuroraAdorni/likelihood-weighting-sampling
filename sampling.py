@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-
 # Set the nodes in the topologic order H, W, A, J
 nodes = np.array(["H", "W", "A", "J"])
 
@@ -26,6 +25,7 @@ parents = np.array([[0, 0, 0, 0],
 
 # print(bn)
 e = {nodes[1]: True, nodes[3]: False}
+import copy
 
 
 def weighted_sample(bn, parents, evidence):
@@ -33,7 +33,7 @@ def weighted_sample(bn, parents, evidence):
     # we want to calculate P(H=T|J=F, W=T)
 
     weight = 1
-    sample = evidence
+    sample = copy.deepcopy(evidence)
 
     for i, n in enumerate(nodes):
         par = nodes[parents[i]]
