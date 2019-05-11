@@ -66,6 +66,8 @@ def likelihood_weighting(query, evidence, net, n_sample):
 
     weights = [0, 0]
 
+    print("\nGenerating ", n_sample, " samples...")
+
     for i in range(n_sample):
         sample, weight = weighted_sample(net, evidence)
 
