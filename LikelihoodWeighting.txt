@@ -1,0 +1,40 @@
+## Adorni Giorgia 8067687 - 3rd Assignment
+
+Probability table Rush Hour
+    True   False
+0    0.2    0.8
+
+Probability table Bad Weather
+    True   False
+0   0.05   0.95
+
+Probability table Accident
+    True   False
+0    0.3    0.7
+1    0.1    0.9
+
+Probability table Traffic Jam
+    True   False
+0   0.10   0.90
+1   0.60   0.40
+2   0.30   0.70
+3   0.50   0.50
+4   0.95   0.05
+5   0.95   0.05
+6   0.95   0.05
+7   0.95   0.05
+
+Evidence:  A =  True
+
+Query:  J =  True
+
+Generating  1000000  samples...
+
+Likelihood: 
+    True   False
+0    0.6    0.4
+
+P( J = True | A = True )= 0.5999999310358173
+
+
+Time to complete the execution:  0:02:06.299664  seconds.
